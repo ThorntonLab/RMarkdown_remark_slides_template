@@ -31,6 +31,7 @@ At the very least:
 * `knitr`
 * `kableExtra`
 * `magrittr`
+* `xaringan`
 
 ## Steps to get your own talk started.
 
