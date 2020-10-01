@@ -13,7 +13,7 @@ clean:
 	rm -rf $(FILES_DIRECTORY)
 
 # List the dependencies for the presentation
-$(SLIDES): preamble.tex $(IMAGES)
+$(SLIDES): $(IMAGES)
 
 %.html: %.Rmd
 	R --no-save --quiet -e "rmarkdown::render('$<')"
