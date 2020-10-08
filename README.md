@@ -73,3 +73,42 @@ use_python("/usr/bin/python3", required=T)
 
 2. You may need to configure the path in the `use_python` command.
 
+### Using a local copy of MathJax
+
+[MathJax](https://github.com/mathjax/MathJax) is used to generate images for rendering equations written in `LaTeX`.
+It is a `JavaScript` service.
+By default, your slides will need a network connection to access it.
+Also, you cannot print your slides to `PDF` using `Chrome` or `chromium` from the command line when using `MathJax` in the default way.
+(Well, you *can*, but you don't get your nicely-rendered equations.)
+
+So, if you want to show slides without a network and/or export to `PDF`, you need a local `MathJax`:
+
+```sh
+git clone https://github.com/mathjax/MathJax mjtemp
+mv mjtemp/es5 MathJax
+```
+
+You probably also want to add and commit the `MathJax` to your repo:
+
+```sh
+git add MathJax
+git commit MathJax -m "Added local MathJax"
+```
+
+Then, edit the `YAML` front matter to look like this:
+
+```
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    self_contained: true
+    mathjax: MathJax/tex-chtml.js
+```
+
+You still need a network connection to *build* your slides, but you can view them when offline.
+
+Advanced options here include:
+
+1. Using `MathJax` as a git submodule.
+   Doing this will save a lot of space.
+2. Reading the `README` at the [MathJax repo](https://github.com/mathjax/MathJax) to learn what files you can delete from `MathJax/` to save space.
