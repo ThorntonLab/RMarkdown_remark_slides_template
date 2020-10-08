@@ -20,7 +20,9 @@ clean:
 	rm -f $(SLIDES)
 	rm -f $(PDF)
 	rm -rf $(FILES_DIRECTORY)
+	rm -f $(HANDOUTS)
 	rm -f blank.pdf
+	rm -f *.bigslides.pdf
 
 # List the dependencies for the presentation
 $(SLIDES): $(IMAGES)
@@ -31,20 +33,34 @@ $(SLIDES): $(IMAGES)
 %.pdf: %.html
 	chromium --headless --print-to-pdf=$@ $<
 
-blank.pdf: blank.tex
-	pdflatex $<
-	
 $(PDF): $(SLIDES)
 
-$(HANDOUTS): $(PDF) blank.pdf
+# Below are the rules for generating handouts from slides.
+# If you use equations, you need local MathJax.  
+# See README about that.
+
+# Create our blank page.
+blank.pdf: blank.tex
+	pdflatex $<
+
+# Take the pdf export of the slides and:
+# 1. Copy it to a temp file, which is the target of this rule
+# 2. Figure out how many pages it is.
+# 3. Add a blank page after each slide.
+%.temp.pdf: %.pdf blank.pdf
 	$(eval TFILE=$(shell basename $< .pdf))
-	$(shell cp $< $(TFILE)"_temp.pdf")
-	$(eval NPAGES=$(shell exiftool -T -PageCount $(TFILE)"_temp.pdf"))
+	$(shell cp $< $(TFILE)".temp.pdf")
+	$(eval NPAGES=$(shell exiftool -T -PageCount $<))
 	$(eval RANGE=$(shell seq 1 ${NPAGES}))
-	$(eval PDFJAM_ARG=$(foreach I,$(RANGE), $(TFILE)"_temp.pdf" $(I) blank.pdf 1 ))
-	pdfjam -o $(TFILE)"_preslides.pdf" --fitpaper true $(PDFJAM_ARG)
-	rm -f $(TFILE)"_temp.pdf"
-	pdfjam --nup 2x2 --landscape --paper a4paper --frame true --noautoscale false --delta "0.2cm 0.3cm" --scale 0.95 -o $(TFILE)"_bigslides.pdf" $(TFILE)"_preslides.pdf"
-	rm -f $(TFILE)"_preslides.pdf"
-	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook -dPrinted=false -dNOPAUSE -dQUIET -dBATCH -sOUTPUTFILE=$@ $(TFILE)"_bigslides.pdf"
-	rm -f $(TFILE)"_bigslides.pdf"
+	$(eval PDFJAM_ARG=$(foreach I,$(RANGE), $(TFILE)".temp.pdf" $(I) blank.pdf 1 ))
+	pdfjam -o $@ --fitpaper true $(PDFJAM_ARG)
+
+# Create the handout.
+# The output file is very large!
+%.bigslides.pdf: %.temp.pdf
+	pdfjam --nup 2x2 --landscape --paper a4paper --frame true --noautoscale false --delta "0.2cm 0.3cm" --scale 0.95 -o $@ $<
+
+# Run the hantout thru ghostcript to reduce file size.
+# The big version is kep.
+$(HANDOUTS): $(PRESENTATIONNAME).bigslides.pdf $(PDF)
+	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook -dPrinted=false -dNOPAUSE -dQUIET -dBATCH -sOUTPUTFILE=$@ $<
