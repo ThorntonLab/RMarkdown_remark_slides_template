@@ -61,6 +61,6 @@ blank.pdf: blank.tex
 	pdfjam --nup 2x2 --landscape --paper a4paper --frame true --noautoscale false --delta "0.2cm 0.3cm" --scale 0.95 -o $@ $<
 
 # Run the hantout thru ghostcript to reduce file size.
-# The big version is kep.
+# The big version is kept.
 $(HANDOUTS): $(PRESENTATIONNAME).bigslides.pdf $(PDF)
 	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook -dPrinted=false -dNOPAUSE -dQUIET -dBATCH -sOUTPUTFILE=$@ $<
